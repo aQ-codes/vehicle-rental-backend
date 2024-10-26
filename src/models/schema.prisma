@@ -1,0 +1,149 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Admin model for managing admins
+model Admin {
+  id       Int    @id @default(autoincrement())
+  email    String @unique
+  password String
+}
+
+// Customer model for storing customer information
+model Customer {
+  id              Int      @id @default(autoincrement())  
+  name            String                                      // User's full name
+  email           String   @unique                           // User's email (unique)
+  phone           String   @unique                           // User's phone number
+  city            String                                      
+  state           String                                     
+  country         String                                     
+  pincode         String                                     
+  password        String  
+  isVerified      Boolean                                // User's password (hashed)
+  reservations     VehicleReservation[]                    // Relation to VehicleReservation
+  bookings         Booking[]                               // Relation to Booking
+  waitingList      WaitingList[]                           // Relation to WaitingList
+}
+
+// Vehicle models and their info
+model VehicleModel {
+  id               Int                  @id @default(autoincrement())
+  name             String
+  make             String               // Vehicle make
+  model            String               // Vehicle model
+  type             String
+  doors            Int
+  seats            Int       
+  description      String
+  primaryImage     String               // URL for primary image
+  additionalImages String[]             // URLs for additional images
+  quantity         Int                  @default(0)
+
+  // Relations
+  vehicles         VehicleInventory[]   // One-to-many relation with VehicleInventory        // One-to-many relation with VehicleQty
+  waitingList      WaitingList[]        // One-to-many relation with WaitingList
+}
+
+// Locations
+model Location {
+  id        Int                  @id @default(autoincrement()) // Unique identifier
+  name      String               // Name of the location
+}
+
+// Each vehicle by their VIN number and other rental info
+model VehicleInventory {
+  id               Int      @id @default(autoincrement())
+  vin              String   @unique // Vehicle Identification Number (VIN)
+  modelId          Int      // Foreign key referencing VehicleModel
+  variant          String
+  year             Int
+  color            String   
+  transmission     String
+  fuelType         String   // Fuel type (e.g., gasoline, diesel, electric)
+  engineCapacity   Float    // Engine capacity in liters
+  mileage          Float    // Vehicle mileage in kilometers or miles
+  pricePerDay      Float    // Price per day for renting the vehicle
+  status           String   // Status (e.g., available, under maintenance, rented)
+  createdAt        DateTime @default(now()) 
+  updatedAt        DateTime @updatedAt 
+
+  // Relations
+  model    VehicleModel  @relation(fields: [modelId], references: [id]) // Relation to VehicleModel
+  reservations VehicleReservation[] // Added inverse relation to VehicleReservation
+}
+
+
+// Vehicle reservation table
+model VehicleReservation {
+  id               Int      @id @default(autoincrement())
+  vehicleId       Int      // Foreign key referencing VehicleInventory
+  customerId      Int      // Foreign key referencing Customer
+  startDate        DateTime
+  endDate          DateTime
+  status           String   // Status (e.g., reserved, canceled)
+  bufferDays       Int      // Number of buffer days for potential delays
+
+  // Relations
+  vehicle  VehicleInventory @relation(fields: [vehicleId], references: [id]) // Relation to VehicleInventory
+  customer Customer         @relation(fields: [customerId], references: [id]) // Relation to Customer
+}
+
+// Booking table
+model Booking {
+  id               Int      @id @default(autoincrement())
+  customerId      Int      // Foreign key referencing Customer
+  status           String   // Status (e.g., active, completed, canceled)
+  createdAt        DateTime @default(now()) 
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id]) // Relation to Customer
+  payments  Payment[] @relation("BookingPayments") // Inverse relation to Payment
+  billing   Billing?  @relation("BookingBilling")   // Inverse relation to Billing
+}
+
+// Payment table
+model Payment {
+  id               Int      @id @default(autoincrement())
+  bookingId        Int      // Foreign key referencing Booking
+  amount           Float    // Total payment amount
+  paymentDate      DateTime @default(now())
+  paymentMethod    String   // Payment method (e.g., credit card, PayPal)
+  status           String   // Payment status (e.g., completed, pending, failed)
+
+  // Relations
+  booking Booking @relation("BookingPayments", fields: [bookingId], references: [id]) // Relation to Booking
+}
+
+// Billing table
+model Billing {
+  id               Int      @id @default(autoincrement())
+  bookingId        Int      @unique
+  numberOfDays     Int
+  baseCharges       Float
+  fine              Float    // Penalty for late returns
+  additionalService Float    // Charges for additional services
+
+  // Relations
+  booking Booking @relation("BookingBilling", fields: [bookingId], references: [id]) // Relation to Booking
+}
+
+// Waiting list table
+model WaitingList {
+  id               Int      @id @default(autoincrement())
+  customerId      Int      // Foreign key referencing Customer
+  modelId          Int      // Foreign key referencing VehicleModel
+  waitingListNumber Int      // Position in the waiting list
+
+  // Relations
+  customer Customer @relation(fields: [customerId], references: [id]) // Relation to Customer
+  model    VehicleModel @relation(fields: [modelId], references: [id]) // Relation to VehicleModel
+}
