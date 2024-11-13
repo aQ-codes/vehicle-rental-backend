@@ -31,7 +31,7 @@ const vehicleInventoryController = {
                 // Update the model's quantity after a successful insert
                 await vehicleModelController.updateVehicleModelQuantity(entry.modelId);
 
-                // Upload the updated inventory entry and model to Typesense
+                // Typesense : Upload the updated inventory entry and model to Typesense
                 try {
                   await uploadVehicleInventory(createdEntry); // Typesense upload for the current entry
                   const updatedModel = await vehicleModelRepository.getById(createdEntry.modelId);
@@ -116,6 +116,7 @@ const vehicleInventoryController = {
 
     try {
         const vehicles = await vehicleInventoryRepository.getByModelId(modelId);
+        console.log(vehicles)
         if (!vehicles || vehicles.length === 0) throw new Error('No vehicles found for the given model ID');
         return vehicles;
     } catch (err) {

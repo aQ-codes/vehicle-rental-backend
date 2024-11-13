@@ -10,16 +10,20 @@ import vehicleInventoryResolvers from './admin/resolvers/vehicle-inventory-resol
 // from graphql customer 
 // type-defs 
 import customerTypeDefs from './customer/type-defs/customer-type-defs.js'; 
+import customerAuthTypeDefs from './customer/type-defs/auth-type-defs.js';
+
 import vehicleTypeDefs from './customer/type-defs/vehicle-type-defs.js';
 // resolvers 
 import customerResolvers from './customer/resolvers/customer-resolvers.js'; 
+import customerAuthResolvers from './customer/resolvers/auth-resolvers.js';
 import vehicleResolvers from './customer/resolvers/vehicle-resolvers.js';
 
 import { mergeTypeDefs } from '@graphql-tools/merge';
 
 
-const typeDefs = mergeTypeDefs([baseTypeDefs, vehicleModelTypeDefs, vehicleInventoryTypeDefs,  customerTypeDefs, vehicleTypeDefs]); 
 
-const resolvers = [vehicleInventoryResolvers, vehicleModelResolvers, customerResolvers, vehicleResolvers]; 
+const typeDefs = mergeTypeDefs([baseTypeDefs, vehicleModelTypeDefs, vehicleInventoryTypeDefs,  customerTypeDefs, vehicleTypeDefs, customerAuthTypeDefs]); 
+
+const resolvers = [vehicleInventoryResolvers, vehicleModelResolvers, customerResolvers, vehicleResolvers,customerAuthResolvers]; 
 
 export { typeDefs, resolvers };

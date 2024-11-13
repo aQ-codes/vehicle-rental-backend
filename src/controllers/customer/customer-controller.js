@@ -48,14 +48,8 @@ const customerController = {
       // Logic to get a customer by ID
       return await customerRepository.findById(id); 
   },
-  // updateVerifyStatus:async(id) =>{
 
-  // }
 
-  incrementVehicleModelQuantity : async (modelId) => {
-    const count = await vehicleInventoryRepository.getVehicleCountByModelId(modelId);
-    await vehicleModelRepository.update(modelId, { quantity: count });
-  },
 
 };
 

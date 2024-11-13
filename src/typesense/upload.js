@@ -27,15 +27,15 @@ export const uploadVehicleInventory = async (inventory) => {
   const inventoryData = {
     id: inventory.id.toString(),
     vin: inventory.vin,
-    modelId: inventory.modelId,
+    modelId: inventory.modelId.toString(),
     variant: inventory.variant,
     year: inventory.year,
     color: inventory.color,
     transmission: inventory.transmission,
     fuelType: inventory.fuelType,
-    engineCapacity: inventory.engineCapacity,
-    mileage: inventory.mileage,
-    pricePerDay: inventory.pricePerDay,
+    engineCapacity: parseFloat(inventory.engineCapacity), 
+    mileage: parseFloat(inventory.mileage), 
+    pricePerDay: parseFloat(inventory.pricePerDay), 
     status: inventory.status,
   };
 

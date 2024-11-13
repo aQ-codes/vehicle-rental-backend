@@ -25,7 +25,10 @@ const startApolloServer = async () => {
     const apolloServer = new ApolloServer({
       typeDefs,
       resolvers,
-      uploads: false, // Disable built-in upload handling as we're using middleware
+      uploads: false,// Disable built-in upload handling as we're using middleware
+      context: ({ req }) => ({
+        userId: req.userId,
+      }),
       formatError: (err) => {
         console.error('Error:', err);
         return err; // Handle errors globally
@@ -42,7 +45,7 @@ const startApolloServer = async () => {
     });
 
     // Start the Express server
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`Server started on port ${PORT}`);
       console.log(`GraphQL endpoint available at http://localhost:${PORT}${apolloServer.graphqlPath}`);
     });

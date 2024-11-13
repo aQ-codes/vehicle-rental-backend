@@ -20,7 +20,7 @@ export const vehicleInventoryIndexSchema = {
   fields: [
     { name: 'id', type: 'int32', index: true, facet: true },
     { name: 'vin', type: 'string', index: true, facet: true },
-    { name: 'modelId', type: 'int32', index: true, facet: true },
+    { name: 'modelId', type: 'string', index: true, facet: true },
     { name: 'variant', type: 'string', index: true, facet: true },
     { name: 'year', type: 'int32', index: true, facet: true },
     { name: 'color', type: 'string', index: true, facet: true },

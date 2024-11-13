@@ -1,4 +1,4 @@
-// errorHandler.js
+
 export const errorHandler = (error) => {
     if (error.extensions?.code === "BAD_USER_INPUT") {
       return {

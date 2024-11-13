@@ -1,4 +1,5 @@
-import { sendOtpController, validateOtpController } from '../../../controllers/customer/otp'
+import { sendOtpController, validateOtpController } from '../../../controllers/customer/otp-controller.js'
+
 const otpResolvers = {
   Query: {
     // Resolver to send OTP
@@ -17,3 +18,4 @@ const otpResolvers = {
 
 export default otpResolvers;
 
+//

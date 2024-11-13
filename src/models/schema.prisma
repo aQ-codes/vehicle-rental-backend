@@ -10,140 +10,169 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Admin model for managing admins
 model Admin {
   id       Int    @id @default(autoincrement())
   email    String @unique
   password String
 }
 
-// Customer model for storing customer information
 model Customer {
-  id              Int      @id @default(autoincrement())  
-  name            String                                      // User's full name
-  email           String   @unique                           // User's email (unique)
-  phone           String   @unique                           // User's phone number
-  city            String                                      
-  state           String                                     
-  country         String                                     
-  pincode         String                                     
-  password        String  
-  isVerified      Boolean                                // User's password (hashed)
-  reservations     VehicleReservation[]                    // Relation to VehicleReservation
-  bookings         Booking[]                               // Relation to Booking
-  waitingList      WaitingList[]                           // Relation to WaitingList
+  id           Int                @id @default(autoincrement())  
+  name         String
+  email        String             @unique
+  phone        String             @unique
+  city         String
+  state        String
+  country      String
+  pincode      String
+  password     String  
+  isVerified   Boolean
+  bookings     Booking[]
+  otp          OTP[]
+  reservations Reservation[]
+  waitingList  WaitingList[]
+  carRentals   RentalActive[]
 }
 
-// Vehicle models and their info
 model VehicleModel {
-  id               Int                  @id @default(autoincrement())
+  id               Int                   @id @default(autoincrement())
   name             String
-  make             String               // Vehicle make
-  model            String               // Vehicle model
+  make             String
+  model            String
   type             String
   doors            Int
   seats            Int       
   description      String
-  primaryImage     String               // URL for primary image
-  additionalImages String[]             // URLs for additional images
-  quantity         Int                  @default(0)
-
-  // Relations
-  vehicles         VehicleInventory[]   // One-to-many relation with VehicleInventory        // One-to-many relation with VehicleQty
-  waitingList      WaitingList[]        // One-to-many relation with WaitingList
+  primaryImage     String
+  additionalImages String[]
+  quantity         Int                   @default(0)
+  vehicles         VehicleInventory[]
 }
 
-// Locations
 model Location {
-  id        Int                  @id @default(autoincrement()) // Unique identifier
-  name      String               // Name of the location
+  id   Int     @id @default(autoincrement())
+  name String
 }
 
-// Each vehicle by their VIN number and other rental info
 model VehicleInventory {
-  id               Int      @id @default(autoincrement())
-  vin              String   @unique // Vehicle Identification Number (VIN)
-  modelId          Int      // Foreign key referencing VehicleModel
-  variant          String
+  id               Int                  @id @default(autoincrement())
+  vin              String               @unique
+  modelId          Int
+  variant          String 
   year             Int
   color            String   
   transmission     String
-  fuelType         String   // Fuel type (e.g., gasoline, diesel, electric)
-  engineCapacity   Float    // Engine capacity in liters
-  mileage          Float    // Vehicle mileage in kilometers or miles
-  pricePerDay      Float    // Price per day for renting the vehicle
-  status           String   // Status (e.g., available, under maintenance, rented)
-  createdAt        DateTime @default(now()) 
-  updatedAt        DateTime @updatedAt 
+  fuelType         String
+  engineCapacity   Float
+  mileage          Float
+  pricePerDay      Float
+  status           String               //available, booked, nops, maintenance, rented
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
 
-  // Relations
-  model    VehicleModel  @relation(fields: [modelId], references: [id]) // Relation to VehicleModel
-  reservations VehicleReservation[] // Added inverse relation to VehicleReservation
+  model            VehicleModel         @relation(fields: [modelId], references: [id])
+  reservations     Reservation[]
+  rentals          RentalActive[]
+  waitingList      WaitingList[]
+
 }
 
+model Booking {
+  id               Int                  @id @default(autoincrement())
+  customerId       Int
+  vehicleId        Int    //vehicle inventory id
+  pickupLocation   Int
+  dropoffLocation  Int
+  pickupDate       DateTime
+  dropoffDate      DateTime
+  pickupTime       DateTime
+  dropoffTime      DateTime
+  type             String
+  status           String               // Pending, Confirmed, Cancelled
+  createdAt        DateTime             @default(now())
+  returnDate       DateTime?            // when vehicle is actually returned
+  vehicleCondition String               //condition of vehicle when returned 
 
-// Vehicle reservation table
-model VehicleReservation {
-  id               Int      @id @default(autoincrement())
-  vehicleId       Int      // Foreign key referencing VehicleInventory
-  customerId      Int      // Foreign key referencing Customer
+  customer         Customer             @relation(fields: [customerId], references: [id])
+  payments         Payment[]            @relation("BookingPayments")
+  billing          Billing?             @relation("BookingBilling")
+  Rentals          RentalActive[]
+}
+
+//if the booking status is confirmed a reservation entry is created.If it is canceleld reservaion entry is deleted
+
+model Reservation {
+  id               Int                  @id @default(autoincrement())
+  vehicleId        Int
+  customerId       Int
   startDate        DateTime
   endDate          DateTime
-  status           String   // Status (e.g., reserved, canceled)
-  bufferDays       Int      // Number of buffer days for potential delays
+  status           String     //active or upcoming
+  returnStatus     String     //early, late
 
-  // Relations
-  vehicle  VehicleInventory @relation(fields: [vehicleId], references: [id]) // Relation to VehicleInventory
-  customer Customer         @relation(fields: [customerId], references: [id]) // Relation to Customer
+  vehicle          VehicleInventory     @relation(fields: [vehicleId], references: [id])
+  customer         Customer             @relation(fields: [customerId], references: [id])
 }
 
-// Booking table
-model Booking {
-  id               Int      @id @default(autoincrement())
-  customerId      Int      // Foreign key referencing Customer
-  status           String   // Status (e.g., active, completed, canceled)
-  createdAt        DateTime @default(now()) 
+//current rental status of the vehicle variant.This table is created once the reservation day arrives.And is deleted once the reservation is deleted.If status is returned  then reservation table is updated
 
-  // Relations
-  customer Customer @relation(fields: [customerId], references: [id]) // Relation to Customer
-  payments  Payment[] @relation("BookingPayments") // Inverse relation to Payment
-  billing   Billing?  @relation("BookingBilling")   // Inverse relation to Billing
+model RentalActive {
+  id               Int                  @id @default(autoincrement())
+  vehicleId        Int
+  customerId       Int
+  bookingId        Int
+  dropOffDate      DateTime
+  status           String               // Pending: incase customer didnt pickup , picked-up:customer picked up, returned
+  vehicleCondition String               @default("N/A")//damage,good
+  currentDate      DateTime             @default(now())
+
+
+  vehicle          VehicleInventory     @relation(fields: [vehicleId], references: [id])
+  customer         Customer             @relation(fields: [customerId], references: [id])
+  booking          Booking              @relation(fields: [bookingId], references: [id])
 }
 
-// Payment table
-model Payment {
-  id               Int      @id @default(autoincrement())
-  bookingId        Int      // Foreign key referencing Booking
-  amount           Float    // Total payment amount
-  paymentDate      DateTime @default(now())
-  paymentMethod    String   // Payment method (e.g., credit card, PayPal)
-  status           String   // Payment status (e.g., completed, pending, failed)
-
-  // Relations
-  booking Booking @relation("BookingPayments", fields: [bookingId], references: [id]) // Relation to Booking
-}
-
-// Billing table
-model Billing {
-  id               Int      @id @default(autoincrement())
-  bookingId        Int      @unique
-  numberOfDays     Int
-  baseCharges       Float
-  fine              Float    // Penalty for late returns
-  additionalService Float    // Charges for additional services
-
-  // Relations
-  booking Booking @relation("BookingBilling", fields: [bookingId], references: [id]) // Relation to Booking
-}
-
-// Waiting list table
 model WaitingList {
-  id               Int      @id @default(autoincrement())
-  customerId      Int      // Foreign key referencing Customer
-  modelId          Int      // Foreign key referencing VehicleModel
-  waitingListNumber Int      // Position in the waiting list
+  id               Int                  @id @default(autoincrement())
+  customerId       Int
+  vehicleId        Int
+  bookingId        Int
+  waitingListNumber Int
 
-  // Relations
-  customer Customer @relation(fields: [customerId], references: [id]) // Relation to Customer
-  model    VehicleModel @relation(fields: [modelId], references: [id]) // Relation to VehicleModel
+  customer         Customer             @relation(fields: [customerId], references: [id])
+  vehicle          VehicleInventory         @relation(fields: [vehicleId], references: [id])
 }
+
+model Billing {
+  id               Int                  @id @default(autoincrement())
+  bookingId        Int                  @unique
+  numberOfDays     Int
+  baseCharges      Float
+  fine             Float?
+  additionalService Float?
+
+  booking          Booking              @relation("BookingBilling", fields: [bookingId], references: [id])
+}
+
+
+model Payment {
+  id               Int                  @id @default(autoincrement())
+  bookingId        Int
+  amount           Float
+  paymentDate      DateTime             @default(now())
+  paymentMethod    String
+  status           String               // Completed, Pending, Failed
+
+  booking          Booking              @relation("BookingPayments", fields: [bookingId], references: [id])
+}
+
+
+model OTP {
+  id           Int      @id @default(autoincrement())
+  customerId   Int
+  otpValue     String
+  createdAt    DateTime @default(now())
+  expiresAt    DateTime
+  customer     Customer @relation(fields: [customerId], references: [id])
+}
+

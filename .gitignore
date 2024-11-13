@@ -1,3 +1,15 @@
-node_modules
-# Keep environment variables out of version control
-.env
+# Ignore build artifacts and generated files
+/node_modules/
+/build/
+/.next/
+/dist/
+/coverage/
+
+# Ignore Docker-related files
+**/docker-compose.override.yml
+**/.dockerignore
+**/Dockerfile
+
+# Ignore Docker volumes or logs
+/var/lib/docker/
+/docker-compose.yml

@@ -1,37 +1,68 @@
+import { sendOTP } from "../../utils/2factor-utils";
 import { generateOTP } from "../../utils/otp-utils";
+import otpRepository from "../../repositories/otpRepository";
+import prisma from "../../models/prisma.client.js"; 
 
-// In-memory storage for OTPs
-const otpStore = new Map();
 
-// Send OTP and store in memory
+// Send OTP to customer and store in the database
 export const sendOtpController = async (phoneNumber) => {
+  console.log("entered sentOtpController")
+  // Find customer by phone number
+  const customer = await prisma.customer.findUnique({
+    where: { phone: phoneNumber },
+  });
+
+  if (!customer) {
+    throw new Error("Customer not found");
+  }
+
   const otpValue = generateOTP(); // Generate OTP
   await sendOTP(phoneNumber, otpValue); // Send OTP via 2Factor API
 
-  // Store OTP in memory with a timestamp for expiration
-  otpStore.set(phoneNumber, { otpValue, createdAt: Date.now() });
+  // Set OTP expiration time (5 minutes from now)
+  const expiresAt = new Date(Date.now() + 5 * 60 * 1000); 
+
+  // Create or update OTP in the database
+  await otpRepository.createOrUpdateOtp({
+    customerId: customer.id,
+    otpValue,
+    expiresAt,
+  });
 
   return "OTP sent successfully";
 };
 
+
 // Validate OTP entered by the user
 export const validateOtpController = async (phoneNumber, userOtp) => {
-  const otpRecord = otpStore.get(phoneNumber);
+  console.log("entered validateOtpController")
+  // Find customer by phone number
+  const customer = await prisma.customer.findUnique({
+    where: { phone: phoneNumber },
+  });
+
+  if (!customer) {
+    throw new Error("Customer not found");
+  }
+
+  // Find OTP by customerId
+  const otpRecord = await otpRepository.findOtpByCustomerId(customer.id);
 
   if (!otpRecord) {
     throw new Error("OTP not found or expired");
   }
 
-  // Check if the OTP is still valid (e.g., within 5 minutes)
-  const timeDifference = (Date.now() - otpRecord.createdAt) / 1000 / 60; // Time difference in minutes
-  if (timeDifference > 5) {
-    otpStore.delete(phoneNumber); // Remove expired OTP
+  // Check if OTP is expired
+  const isExpired = new Date() > otpRecord.expiresAt;
+  if (isExpired) {
+    await otpRepository.deleteOtpByCustomerId(customer.id); // Remove expired OTP
     throw new Error("OTP expired");
   }
 
   // Validate the OTP
   if (otpRecord.otpValue === userOtp) {
-    otpStore.delete(phoneNumber); // Remove OTP after successful validation
+    // OTP is valid, delete OTP from the database
+    await otpRepository.deleteOtpByCustomerId(customer.id);
     return "OTP validated successfully";
   } else {
     throw new Error("Invalid OTP");

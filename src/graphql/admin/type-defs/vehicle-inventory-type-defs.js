@@ -6,7 +6,7 @@ const vehicleInventoryTypeDefs = gql`
       id: Int!
       modelId: Int!      
       vin: String!              
-      variant: String!          
+      variant: String!         
       year: Int!               
       color: String!            
       transmission: String!     
@@ -16,7 +16,6 @@ const vehicleInventoryTypeDefs = gql`
       pricePerDay: Float!      
       status: String!                 
   }
-
 
   input AddVehicleInventoryInput {
       id: Int
@@ -48,14 +47,14 @@ const vehicleInventoryTypeDefs = gql`
       error: String
     }
 
-    type AddVehicleInventoriesResponse {
+  type AddVehicleInventoriesResponse {
     success: Boolean!
     partialSuccess: Boolean
     successCount: Int
     failedCount: Int
     alreadyExistingCount: Int
     errorEntries: [ErrorEntry!]
-}
+    }
 
 
   # Queries 
