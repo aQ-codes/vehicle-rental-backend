@@ -7,6 +7,7 @@ const customerController = {
 
   createCustomer: async (input) => {
     try {
+      console.log("entered customer controller")
         // Validate input against the Joi schema
         const { error } = customerValidation.validate(input);
         if (error) {

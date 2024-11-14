@@ -169,7 +169,7 @@ model Payment {
 
 model OTP {
   id           Int      @id @default(autoincrement())
-  customerId   Int
+  customerId   Int      @unique
   otpValue     String
   createdAt    DateTime @default(now())
   expiresAt    DateTime

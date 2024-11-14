@@ -1,8 +1,12 @@
-const { gql } = require("apollo-server-express");
+import { gql } from 'apollo-server-express';
 
 const otpTypeDefs = gql`
-  type Query {
+
+  extend type Mutation {
     sendOtp(phoneNumber: String!): String
+  }
+
+  extend type Query {
     validateOtp(phoneNumber: String!, otp: String!): String
   }
 `;

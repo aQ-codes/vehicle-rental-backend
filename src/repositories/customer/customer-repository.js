@@ -3,6 +3,8 @@ import prisma from '../../models/prisma.client.js';
 const customerRepository = {
 
     create: async (input) => {
+      console.log("entered customer repository")
+
         return await prisma.customer.create({
             data: input,
         });

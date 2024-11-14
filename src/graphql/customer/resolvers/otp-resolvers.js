@@ -2,20 +2,23 @@ import { sendOtpController, validateOtpController } from '../../../controllers/c
 
 const otpResolvers = {
   Query: {
-    // Resolver to send OTP
-    sendOtp: async (_, { phoneNumber }) => {
-      await sendOtpController(phoneNumber);
-      return "OTP sent successfully";
-    },
-
     // Resolver to validate OTP
     validateOtp: async (_, { phoneNumber, otp }) => {
       const result = await validateOtpController(phoneNumber, otp);
       return result;
     },
   },
+
+  Mutation:{
+    // Resolver to send OTP
+    sendOtp: async (_, { phoneNumber }) => {
+      console.log("entered otp resolver")
+      return await sendOtpController(phoneNumber);
+    },
+  },
+
+
 };
 
 export default otpResolvers;
 
-//
